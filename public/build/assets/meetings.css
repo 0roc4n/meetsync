@@ -1,0 +1,62 @@
+/* add meeting button - modal */
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* add meeting button - modal  */
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+}
+
+/* add meeting button - modal */
+.fade-in {
+    animation: fade-in 0.3s ease-in-out forwards;
+}
+
+/* add meeting button - modal */
+.fade-out {
+    animation: fade-out 0.3s ease-in-out forwards;
+}
+
+/* search bar - dropdown */
+#dropdown-menu {
+    z-index: 1000; 
+}
+
+
+/* meetings - card - meeting notes */
+.card-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Distribute space between elements */
+    height: 100%;
+}
+
+.truncate-notes {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 1rem; 
+}
+
+.meeting-status {
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
