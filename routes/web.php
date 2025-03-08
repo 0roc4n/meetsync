@@ -17,8 +17,10 @@ use App\Http\Controllers\MemberHomeController;
 use App\Http\Controllers\MemberMeetingsController;
 use App\Http\Controllers\MemberAccountSettingsController;
 use App\Http\Controllers\MessageController;
-
-
+use Stichoza\GoogleTranslate\GoogleTranslate;
+use OpenAI\Client;
+use Illuminate\Http\Request;
+use OpenAI\Laravel\Facades\OpenAI;
 
 Route::get('/manager_sign_up_form', [ManagerSignUpController::class, 'manager_sign_up_form']);
 Route::post('/manager_sign_up_process', [ManagerSignUpController::class, 'manager_sign_up_process']);
@@ -28,7 +30,25 @@ Route::get('/', [LoginController::class, 'login_form']);
 Route::get('/', [LoginController::class, 'login_form'])->name('login');  //for logout
 Route::post('/login_process', [LoginController::class, 'login_process']);
 
-
+Route::post('/api/translate', function (Request $request) {
+    try {
+        $tr = new GoogleTranslate();
+        $tr->setSource('auto');
+        $tr->setTarget('en');
+        $tr->setOptions(['verify' => false]);
+        
+        $translatedText = $tr->translate($request->text);
+        
+        return response()->json([
+            'translatedText' => $translatedText
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Translation error: ' . $e->getMessage());
+        return response()->json([
+            'translatedText' => $request->text
+        ]);
+    }
+})->name('translate');
 
 Route::middleware('auth:admin')->group(function () {
     Route::get('/dashboarda', [AdminDashboardController::class, 'admin_dashboard'])->name('admin.dashboard');
@@ -40,8 +60,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('/update_admin_account_settings', [AdminAccountSettingsController::class, 'update_admin_account_settings']);
     Route::get('/logout', [LoginController::class, 'logout']);
 });
-
-
 
 Route::middleware('auth:manager')->group(function () {
     Route::get('/home', [ManagerHomeController::class, 'manager_home'])->name('manager.home');
@@ -66,8 +84,6 @@ Route::middleware('auth:manager')->group(function () {
     Route::post('/edit_notes/save_message', [MessageController::class, 'saveMessage'])->name('save_message.manager');
 });
 
-
-
 Route::middleware('auth:member')->group(function () {
     Route::get('/homem', [MemberHomeController::class, 'member_home'])->name('member.home');
     Route::get('/meetingsm', [MemberMeetingsController::class, 'member_meetings'])->name('member.meetings.all');
@@ -80,8 +96,6 @@ Route::middleware('auth:member')->group(function () {
     Route::get('/account_settingsm', [MemberAccountSettingsController::class, 'member_account_settings'])->name('member.account_settings');
     Route::put('/update_member_account_settings', [MemberAccountSettingsController::class, 'update_member_account_settings']);
     Route::get('/logout', [LoginController::class, 'logout']);    
-
-    
 });
 // save and fetch
 Route::post('/save_message', [MessageController::class, 'saveMessage'])->name('save_message');

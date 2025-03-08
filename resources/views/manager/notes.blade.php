@@ -229,7 +229,7 @@
             conversationTextArea.value = updated_summary;
         });
 
-        // speech-to-Text functionality for start/stop recording button
+        // speech-to-Text functionality for start/stop recording button 
         const startRecordingBtn = document.getElementById('start-recording');
         const noteTextArea = document.getElementById('note');
         let recognition;
@@ -270,16 +270,21 @@
 
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript; // Store final recognized text
+                        finalTranscript += event.results[i][0].transcript;
                     } else {
-                        interimTranscript += event.results[i][0].transcript; // Store interim text
+                        interimTranscript += event.results[i][0].transcript;
                     }
                 }
 
                 if (finalTranscript) {
                     let isQuestionText = isQuestion(finalTranscript) ? '?' : '.';
                     
-                    // Translate non-English text to English
+                    // First update the display with untranslated text
+                    const tempConvo = transcriptionBuffer + `\n${senderName}: ${finalTranscript}${isQuestionText}` + 
+                        (interimTranscript ? '\n' + interimTranscript : '');
+                    conversationTextArea.value = tempConvo;
+
+                    // Then translate and update
                     fetch('/api/translate', {
                         method: 'POST',
                         headers: {
@@ -303,22 +308,24 @@
                         });
 
                         // Save translated message
-                        if (translatedText.trim().length > 0) {
-                            fetch('{{ route('save_message') }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                },
-                                body: JSON.stringify({
-                                    meetingId: noteId,
-                                    managerId: managerId,
-                                    senderName,
-                                    content: translatedText + (isQuestion(translatedText) ? '?' : '.')
-                                })
-                            });
-                        }
+                        fetch('{{ route('save_message') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify({
+                                meetingId: noteId,
+                                managerId: managerId,
+                                senderName,
+                                content: translatedText + (isQuestion(translatedText) ? '?' : '.')
+                            })
+                        });
                     });
+                } else if (interimTranscript) {
+                    // Show interim results immediately
+                    const convo = transcriptionBuffer + '\n' + interimTranscript;
+                    conversationTextArea.value = convo;
                 }
             };
 
@@ -363,22 +370,26 @@
         // Add translation functionality
         const translateText = async (text) => {
             try {
-                const response = await fetch('/api/translate', {
+                const response = await fetch('{{ route('translate') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify({
-                        text: text,
-                        targetLanguage: 'English'
+                        text: text
                     })
                 });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
                 const data = await response.json();
-                return data.translatedText;
+                return data.translatedText || text;
             } catch (error) {
                 console.error('Translation error:', error);
-                return text;
+                return text; // Return original text if translation fails
             }
         };
 

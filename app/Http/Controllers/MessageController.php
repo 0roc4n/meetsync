@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Message;
+use Stichoza\GoogleTranslate\GoogleTranslate;
 
 class MessageController extends Controller
 {
