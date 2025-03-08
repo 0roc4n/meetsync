@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
     <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <link rel="stylesheet" href="{{ asset('build/assets/app.css') }}">
+    <script src="https://translation.googleapis.com/language/translate/v2?key=YOUR_ACTUAL_API_KEY"></script>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="sender-name" content="{{ auth()->user()->first_name . ' ' . auth()->user()->last_name }}">
@@ -135,7 +136,7 @@
         }
 
         // Connect to the Socket.IO server
-        const socket = io('https://meetsync-socket-io.onrender.com');
+        const socket = io('http://localhost:3001'); // Changed from 3000 to 3001
 
         // Join a room specific to the meeting and manager
         const noteId = {{ $meeting_info->id }}; // Meeting ID
@@ -163,7 +164,10 @@
             conversationTextArea.value = convo;
         });
 
-
+        // Add socket listener for summary updates
+        socket.on('summary_updated', function(updated_summary) {
+            conversationTextArea.value = updated_summary;
+        });
 
         // speech-to-Text functionality for start/stop recording button
         const startRecordingBtn = document.getElementById('start-recording');
@@ -214,8 +218,19 @@
 
                 if (finalTranscript) {
                     let isQuestionText = isQuestion(finalTranscript) ? '?' : '.';
-                    // Append final text with proper spacing
-                    transcriptionBuffer += `\n${senderName}: ${finalTranscript}${isQuestionText}`;
+                    // Translate before appending
+                    translateText(finalTranscript).then(translatedText => {
+                        transcriptionBuffer += `\n${senderName}: ${translatedText}${isQuestionText}`;
+                        const convo = transcriptionBuffer + (interimTranscript ? '\n' + interimTranscript : '');
+                        conversationTextArea.value = convo;
+                        
+                        // Emit translated conversation
+                        socket.emit('from_client_convo_update', { 
+                            meetingId: noteId, 
+                            managerId, 
+                            content: convo 
+                        });
+                    });
                 }
 
                 const convo = transcriptionBuffer + (interimTranscript ? '\n' + interimTranscript : '');
@@ -268,8 +283,28 @@
             alert('Your browser does not support speech recognition.');
         }
 
-
-
+        // Add translation functionality
+        const translateText = async (text) => {
+            try {
+                const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=YOUR_GOOGLE_API_KEY`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        q: text,
+                        source: 'auto',
+                        target: 'en',
+                        format: 'text'
+                    })
+                });
+                const data = await response.json();
+                return data.data.translations[0].translatedText;
+            } catch (error) {
+                console.error('Translation error:', error);
+                return text;
+            }
+        };
 
         function fetchMessages() {
             fetch('{{ route('fetch.messages') }}', {

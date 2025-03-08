@@ -1,0 +1,14 @@
+{
+  "name": "meetsync-socket-server",
+  "version": "1.0.0",
+  "description": "Socket.IO server for MeetSync",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1",
+    "openai": "^4.0.0"
+  }
+}

@@ -12,7 +12,6 @@
     <script src="{{ asset('build/assets/attendance.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="sender-name" content="{{ auth()->user()->first_name . ' ' . auth()->user()->last_name }}">
-
 </head>
 
 <body class="bg-#e0e0e2">
@@ -92,7 +91,7 @@
                     <div class="flex items-center justify-center">
                         <!-- MEETING SUMMARY -->
                         <div class="mt-4 w-1/2 mx-2">
-                            <textarea readonly id="summary" name="summary"
+                            <textarea id="summary" name="summary"
                                 class="w-full p-2 border border-gray-300 rounded-lg" rows="30"
                                 style="max-height: 80vh; overflow: auto"></textarea>
                         </div>
@@ -192,11 +191,11 @@
         }
 
         // Connect to the Socket.IO server
-        const socket = io('https://meetsync-socket-io.onrender.com')
+        const socket = io('http://localhost:3001')
         // Join a room specific to the meeting and manager
         const noteId = {{ $meeting_info->id }}; // Meeting ID
         const managerId = {{ $meeting_info->manager_id }}; // Manager ID
-        socket.emit('join', { role: 'member', meetingId: noteId, managerId });
+        socket.emit('join', { role: 'manager', meetingId: noteId, managerId });
         const senderName = document.querySelector('meta[name="sender-name"]').getAttribute('content');
 
         // Send note updates when the member modifies the textarea
@@ -219,7 +218,16 @@
             conversationTextArea.value = convo;
         });
 
+        // Add event listener for summary updates
+        conversationTextArea.addEventListener('input', function() {
+            const summary_content = conversationTextArea.value;
+            socket.emit('update_summary', { meetingId: noteId, managerId, content: summary_content });
+        });
 
+        // Add socket listener for summary updates
+        socket.on('summary_updated', function(updated_summary) {
+            conversationTextArea.value = updated_summary;
+        });
 
         // speech-to-Text functionality for start/stop recording button
         const startRecordingBtn = document.getElementById('start-recording');
@@ -270,42 +278,49 @@
 
                 if (finalTranscript) {
                     let isQuestionText = isQuestion(finalTranscript) ? '?' : '.';
-                    // Append final text with proper spacing
-                    transcriptionBuffer += `\n${senderName}: ${finalTranscript}${isQuestionText}`;
-                }
-
-                const convo = transcriptionBuffer + (interimTranscript ? '\n' + interimTranscript : '');
-                conversationTextArea.value = convo;
-
-
-
-                if (finalTranscript.trim().length > 0) {
-                    fetch('{{ route('save_message') }}', {
+                    
+                    // Translate non-English text to English
+                    fetch('/api/translate', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') // Correct CSRF retrieval
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                         },
-                        body: JSON.stringify({
-                            meetingId: noteId,
-                            managerId: managerId,
-                            senderName,
-                            content: finalTranscript + (isQuestion(finalTranscript) ? '?' : '.')
-                        })
+                        body: JSON.stringify({ text: finalTranscript })
                     })
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Message saved:', data);
-                        })
-                        .catch(error => {
-                            console.error('Error saving message:', error);
+                    .then(response => response.json())
+                    .then(data => {
+                        const translatedText = data.translatedText;
+                        transcriptionBuffer += `\n${senderName}: ${translatedText}${isQuestionText}`;
+                        const convo = transcriptionBuffer + (interimTranscript ? '\n' + interimTranscript : '');
+                        conversationTextArea.value = convo;
+                        
+                        // Emit translated conversation
+                        socket.emit('from_client_convo_update', { 
+                            meetingId: noteId, 
+                            managerId, 
+                            content: convo 
                         });
+
+                        // Save translated message
+                        if (translatedText.trim().length > 0) {
+                            fetch('{{ route('save_message') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify({
+                                    meetingId: noteId,
+                                    managerId: managerId,
+                                    senderName,
+                                    content: translatedText + (isQuestion(translatedText) ? '?' : '.')
+                                })
+                            });
+                        }
+                    });
                 }
-
-                // Emit to WebSocket for real-time updates
-                socket.emit('from_client_convo_update', { meetingId: noteId, managerId, content: convo });
             };
-
 
             recognition.onerror = function (event) {
                 console.error('Speech recognition error: ', event.error);
@@ -344,6 +359,45 @@
 
         // Call fetchMessages() when the page loads
         window.onload = fetchMessages;
+
+        // Add translation functionality
+        const translateText = async (text) => {
+            try {
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        targetLanguage: 'English'
+                    })
+                });
+                const data = await response.json();
+                return data.translatedText;
+            } catch (error) {
+                console.error('Translation error:', error);
+                return text;
+            }
+        };
+
+        // Add translation event listener to summary textarea
+        conversationTextArea.addEventListener('input', async function() {
+            const text = this.value;
+            const translatedText = await translateText(text);
+            
+            // Only update if translation is different
+            if (translatedText !== text) {
+                this.value = translatedText;
+                // Emit the translated text through socket
+                socket.emit('update_summary', { 
+                    meetingId: noteId, 
+                    managerId, 
+                    content: translatedText 
+                });
+            }
+        });
 
     </script>
 
