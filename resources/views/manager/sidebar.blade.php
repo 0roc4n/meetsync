@@ -32,7 +32,7 @@
                 <li>
                     <a href="/home" class="flex items-center px-3 py-3 hover:bg-#333333-90 hover:rounded-md hover:cursor-pointer group">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" stroke-width="2" class="w-6 h-5 mr-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 20.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
                         </svg>
                         <span class="text-#9E9E9E font-semibold group-hover:text-white group-hover:font-bold text-sm">Home</span>
                     </a>
@@ -71,23 +71,22 @@
         </nav>
 
         <!-- User's Info -->
-        <div class="bg-[#33333340] p-5 text-white text-center mt-auto rounded-md">
-            <div class="flex">
+        <div class="bg-[#33333340] p-3 text-white mt-auto rounded-md mb-2 max-h-[80px] overflow-hidden">
+            <div class="flex items-start gap-2 w-full">
                 <!-- Profile Circle -->
                 @isset($info)
-                    <div class="w-11 h-11 rounded-full bg-gray-500 flex justify-center mr-3">
-                        <img src="{{ asset($info->profile_picture) }}" alt="Profile Picture" class="w-full h-full object-cover rounded-full">
+                    <div class="flex-shrink-0 w-20 h-20">
+                        <img src="{{ asset($info->profile_picture) }}" alt="Profile Picture" class="w-8 h-18 object-cover rounded-full ring-1 ring-gray-400">
                     </div>
                 @endisset
                 <!-- Text Column -->
-                <div class="flex flex-col items-start font-inter">
+                <div class="flex-1 min-w-0 max-w-[160px]">
                     @isset($info)
-                        <span class="text-base font-semibold">{{ $info->first_name }} {{ $info->last_name }}</span>
-                        <span class="text-xs font-light">{{ $info->email }}</span>
+                        <p class="text-sm font-medium truncate text-white">{{ $info->first_name }} {{ $info->last_name }}</p>
+                        <p class="text-[11px] text-gray-300 truncate">{{ $info->email }}</p>
                     @endisset
                 </div>
             </div>
         </div>
-
     </div>
 </div>

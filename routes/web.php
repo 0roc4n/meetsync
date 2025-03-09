@@ -33,7 +33,7 @@ Route::post('/login_process', [LoginController::class, 'login_process']);
 Route::post('/api/translate', function (Request $request) {
     try {
         $tr = new GoogleTranslate();
-        $tr->setSource('auto');
+        $tr->setSource('bik', 'fl');
         $tr->setTarget('en');
         $tr->setOptions(['verify' => false]);
         

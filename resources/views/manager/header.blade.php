@@ -27,7 +27,7 @@
         </header>
 
         <!-- Sidebar -->
-        @include('manager.sidebar')
+        {{-- @include('manager.sidebar') --}}
 
         <div class="pt-16">
             @yield('content')

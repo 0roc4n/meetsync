@@ -318,12 +318,11 @@ class ManagerMeetingsController extends Controller
     {
         // ensure only managers can access this 
         $user = auth()->guard('manager')->user();
-
         $meeting_info = Meetings::findOrFail($id);
         $meeting_info->notes = $request->input('notes');
         $meeting_info->save();
 
-        return redirect('/edit_notes/' . $id)->with('success_message', 'Meeting notes updated successfully!');
+        return redirect('/meetings')->with('success_message', 'Meeting notes updated successfully!');
     }
 
 
