@@ -36,7 +36,6 @@ class MessageController extends Controller
         $messages = Message::where('meeting_id', $request->meetingId)
             ->orderBy('created_at', 'asc')
             ->get();
-
         return response()->json($messages);
     }
 }

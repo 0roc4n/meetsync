@@ -93,7 +93,7 @@
                         <div class="mt-4 w-1/2 mx-2">
                             <textarea id="summary" name="summary"
                                 class="w-full p-2 border border-gray-300 rounded-lg" rows="30"
-                                style="max-height: 80vh; overflow: auto"></textarea>
+                                style="max-height: 80vh; overflow: auto">{{ $meeting_info->summary }}</textarea>
                         </div>
 
                         <!-- MEETING NOTES -->
@@ -366,49 +366,6 @@
 
         // Call fetchMessages() when the page loads
         window.onload = fetchMessages;
-
-        // Add translation functionality
-        const translateText = async (text) => {
-            try {
-                const response = await fetch('{{ route('translate') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        text: text
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                
-                const data = await response.json();
-                return data.translatedText || text;
-            } catch (error) {
-                console.error('Translation error:', error);
-                return text; // Return original text if translation fails
-            }
-        };
-
-        // Add translation event listener to summary textarea
-        conversationTextArea.addEventListener('input', async function() {
-            const text = this.value;
-            const translatedText = await translateText(text);
-            
-            // Only update if translation is different
-            if (translatedText !== text) {
-                this.value = translatedText;
-                // Emit the translated text through socket
-                socket.emit('update_summary', { 
-                    meetingId: noteId, 
-                    managerId, 
-                    content: translatedText 
-                });
-            }
-        });
 
     </script>
 
