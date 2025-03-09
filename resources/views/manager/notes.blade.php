@@ -93,7 +93,7 @@
                         <div class="mt-4 w-1/2 mx-2">
                             <textarea id="summary" name="summary"
                                 class="w-full p-2 border border-gray-300 rounded-lg" rows="30"
-                                style="max-height: 80vh; overflow: auto"></textarea>
+                                style="max-height: 80vh; overflow: auto">{{ $meeting_info->summary }}</textarea>
                         </div>
 
                         <!-- MEETING NOTES -->

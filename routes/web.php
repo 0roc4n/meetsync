@@ -31,6 +31,7 @@ Route::get('/', [LoginController::class, 'login_form'])->name('login');  //for l
 Route::post('/login_process', [LoginController::class, 'login_process']);
 
 Route::post('/api/translate', function (Request $request) {
+    // $tr = Meetings::where('id', $request->id)->value('summary');
     try {
         $tr = new GoogleTranslate();
         $tr->setSource('bik', 'fl');
@@ -99,7 +100,7 @@ Route::middleware('auth:member')->group(function () {
 });
 // save and fetch
 Route::post('/save_message', [MessageController::class, 'saveMessage'])->name('save_message');
-Route::post('/fetch_messages', [MessageController::class, 'fetchMessages'])->name('fetch.messages');
+Route::get('/fetch_messages', [MessageController::class, 'fetchMessages'])->name('fetch.messages');
 
 
 

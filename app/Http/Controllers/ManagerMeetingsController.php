@@ -320,6 +320,7 @@ class ManagerMeetingsController extends Controller
         $user = auth()->guard('manager')->user();
         $meeting_info = Meetings::findOrFail($id);
         $meeting_info->notes = $request->input('notes');
+        $meeting_info->summary = $request->input('summary');
         $meeting_info->save();
 
         return redirect('/meetings')->with('success_message', 'Meeting notes updated successfully!');
